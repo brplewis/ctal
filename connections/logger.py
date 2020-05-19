@@ -46,9 +46,9 @@ class TeradiciLogger:
 
 
     """
-    def __init__(self, pc_name, log_path=f'//{self.pc_name}/c$/ProgramData/Teradici/PCoIPAgent/logs/', log_prefix='pcoip_agent_'):
+    def __init__(self, pc_name, log_prefix='pcoip_agent_'):
         self.pc_name = pc_name
-        self.path_to_log = log_path
+        self.path_to_log = f'//{pc_name}/c$/ProgramData/Teradici/PCoIPAgent/logs/'
         self.log_prefix = log_prefix
         self.username = ''
         self.status = ''
@@ -64,54 +64,41 @@ class TeradiciLogger:
             If no log file exists
         Returns
         -------
+        A list of all lines in log file
 
         """
-
-
 
         log_contents = []
 
-        with open(f'{self.path_to_log}{self.}', 'r') as log_file:
-            for line in log_file:
-                log_contents.append(line)
-
-
-    def check_for_update(self):
-        """Checks if logs has been updated since last check
-        returns with True if connection status has changed
-
-        Parameters
-        ----------
-
-
-        Raises
-        ------
-        FileNotFoundError
-            If no log file exists
-        """
-
-        log_file = ''
-
-        # Find log file using prefix
+        # Find log file
         try:
-            files_in_log_path = [f for f in os.listdir(self.path_to_log) if os.path.isfile(os.path.join(self.path_to_log, f))]
+            files_in_log_path = [f for f in os.listdir(self.path_to_log) if
+                                 os.path.isfile(os.path.join(self.path_to_log, f))]
 
             try:
+                # Uses prefix to identify correct log file
                 for file in files_in_log_path:
                     if self.log_prefix in file:
                         log_file = file
+
+
+                # Opens and returns contents of log file as a list
+                with open(self.path_to_log + log_file, 'r') as log_file:
+                    log_contents = list(log_file)
+                return log_contents
+
             except FileNotFoundError:
-                print('Log file does not exist.')
+                return 'Log file does not exist.'
 
         except FileNotFoundError:
-            print(f'No log folder found at {self.path_to_log}')
+            return f'No log folder found at {self.path_to_log}'
 
 
 
-        with open(f'{}{}', 'r') as log_file:
-            for lines in
 
 
-        pass
+
+
+
 
 
