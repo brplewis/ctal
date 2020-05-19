@@ -61,10 +61,11 @@ class TeradiciLogger:
         Raises
         ------
         FileNotFoundError
-            If no log file exists
+            If no log file or log path exists
+
         Returns
         -------
-        A list of all lines in log file
+        A list of all lines in log file or error messages
 
         """
 
@@ -93,6 +94,48 @@ class TeradiciLogger:
         except FileNotFoundError:
             return f'No log folder found at {self.path_to_log}'
 
+
+    def check_for_updates(self, log_file):
+        """ Checks to see if log date is newer than previous and returns
+        all lines with updated messages
+
+        Parameters
+        ----------
+        log_file : list
+            Requires list from read_log_file
+
+        Raises
+        ------
+
+
+        Returns
+        -------
+        List of updated lines only or None
+
+        """
+
+        new_log_messages = []
+
+        try:
+
+            for line in log_file:
+                # Read date and time prefix and format it to compare
+                # With last update time
+                line_date = line[:19]
+                line_date = line_date.split('T')
+
+                if line_date[0] > self.last_updated[0]:
+                    if line_date[1] > self.last_updated[1]:
+                        new_log_messages.append(line)
+
+            if len(new_log_messages) > 0:
+                self.updated = True
+                return new_log_messages
+            else:
+                self.updated = False
+                return None
+        except:
+            return 'Unexpected error in logger.TeradiciLogger.check_for_updates()'
 
 
 
