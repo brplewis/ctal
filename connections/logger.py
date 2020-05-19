@@ -35,7 +35,7 @@ class TeradiciLogger:
     -------
 
     check_for_update()
-        Updates status with latest status and updates the updated
+        Updates status var with latest status and updates the updated
         var with True if connection status has changed
     report_connection()
         Returns the connection status and info as a list to be used
@@ -52,7 +52,20 @@ class TeradiciLogger:
         self.updated = False
         self.last_updated = ''
 
+    def check_for_update(self):
+        """Updates status var with latest status and updates the updated
+        var with True if connection status has changed
+
+        Parameters
+        ----------
 
 
-    def report_connection(self):
+        Raises
+        ------
+        FileNotFoundError
+            If no log file exists
+        """
+
         pass
+
+
