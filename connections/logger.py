@@ -5,6 +5,9 @@
 
 """
 
+import os.path
+import os
+
 class TeradiciLogger:
     """
     A logger class for monitoring and
@@ -35,8 +38,8 @@ class TeradiciLogger:
     -------
 
     check_for_update()
-        Updates status var with latest status and updates the updated
-        var with True if connection status has changed
+        Checks if logs has been updated since last check
+        returns with True if connection status has changed
     report_connection()
         Returns the connection status and info as a list to be used
         for database entry
@@ -52,9 +55,30 @@ class TeradiciLogger:
         self.updated = False
         self.last_updated = ''
 
+    def read_log_file(self):
+        """ Finds and reads log file and returns as list of strings
+
+        Raises
+        ------
+        FileNotFoundError
+            If no log file exists
+        Returns
+        -------
+
+        """
+
+
+
+        log_contents = []
+
+        with open(f'{self.path_to_log}{self.}', 'r') as log_file:
+            for line in log_file:
+                log_contents.append(line)
+
+
     def check_for_update(self):
-        """Updates status var with latest status and updates the updated
-        var with True if connection status has changed
+        """Checks if logs has been updated since last check
+        returns with True if connection status has changed
 
         Parameters
         ----------
@@ -65,6 +89,28 @@ class TeradiciLogger:
         FileNotFoundError
             If no log file exists
         """
+
+        log_file = ''
+
+        # Find log file using prefix
+        try:
+            files_in_log_path = [f for f in os.listdir(self.path_to_log) if os.path.isfile(os.path.join(self.path_to_log, f))]
+
+            try:
+                for file in files_in_log_path:
+                    if self.log_prefix in file:
+                        log_file = file
+            except FileNotFoundError:
+                print('Log file does not exist.')
+
+        except FileNotFoundError:
+            print(f'No log folder found at {self.path_to_log}')
+
+
+
+        with open(f'{}{}', 'r') as log_file:
+            for lines in
+
 
         pass
 
