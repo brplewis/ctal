@@ -53,5 +53,6 @@ class TeradiciLogger:
         self.last_updated = ''
 
 
+
     def report_connection(self):
         pass
