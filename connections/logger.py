@@ -124,7 +124,7 @@ class TeradiciLogger:
                 line_date = line[:19]
                 line_date = line_date.split('T')
 
-                if line_date[0] > self.last_updated[0]:
+                if line_date[0] >= self.last_updated[0]:
                     if line_date[1] > self.last_updated[1]:
                         new_log_messages.append(line)
 
