@@ -29,5 +29,14 @@ class TestTeradiciLoggerCheck(unittest.TestCase):
         # Test to see if it ignores old lines
         tal_logger.last_updated = ["2020-05-19", "20:27:41"]
         self.assertIsNone(tal_logger.check_for_updates(test_list))
-
-
+        # Test error handling for string
+        self.assertEqual(tal_logger.check_for_updates('String input'), "Input is not a Teradici log list")
+        # Test error handling int
+        self.assertEqual(tal_logger.check_for_updates(10), "Input is not a Teradici log list")
+        # Test Error handling for float
+        self.assertEqual(tal_logger.check_for_updates(1.002), "Input is not a Teradici log list")
+        # Test Error handling for incorrect list short
+        self.assertEqual(tal_logger.check_for_updates(["Log message 1", "Log Message 2"]), "Input is not a Teradici log list")
+        # Test Error handling for incorrect list short
+        self.assertEqual(tal_logger.check_for_updates(["Log message 1 xxxxxxxxxxxxxxxxxxxxxxxxx ", "Log Message 2 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx "]),
+                         "Input is not a Teradici log list")
