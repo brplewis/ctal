@@ -106,7 +106,8 @@ class TeradiciLogger:
 
         Raises
         ------
-
+        TypeError:
+            Returns type error if a string or int/float is inputted
 
         Returns
         -------
@@ -124,6 +125,11 @@ class TeradiciLogger:
                 line_date = line[:19]
                 line_date = line_date.split('T')
 
+                # Test input is correct
+                if len(line_date) <= 1 or len(line_date) > 2:
+                    raise TypeError
+
+                # Check if last update is greater than log date
                 if line_date[0] >= self.last_updated[0]:
                     if line_date[1] > self.last_updated[1]:
                         new_log_messages.append(line)
@@ -134,6 +140,10 @@ class TeradiciLogger:
             else:
                 self.updated = False
                 return None
+
+        except TypeError:
+            return "Input is not a Teradici log list"
+
         except:
             return 'Unexpected error in logger.TeradiciLogger.check_for_updates()'
 
