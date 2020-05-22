@@ -40,15 +40,15 @@ class TeradiciLogger:
 
     Methods
     -------
-    read_log_file()
+    read_log_file() :
         Finds and reads log file and returns as list of strings
-    check_for_update()
+    check_for_update() :
         Checks if logs has been updated since last check
         returns with True if connection status has changed
-    check_for_status()
+    check_for_status() :
         Checks to see if there is a change of connection status
         amongst the new log messages
-    create_update_message()
+    create_update_message() :
         Creates human readable str with session variables
 
 
