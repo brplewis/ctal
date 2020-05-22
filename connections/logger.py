@@ -33,6 +33,9 @@ class TeradiciLogger:
     updated : bool
         Stores a bool stating whether the connection status has been
         updated
+    last_updated : list
+        A list of two strings, [0] stating the date, [1] the time of last update
+        this var is updated by the manager app
 
 
     Methods
@@ -54,7 +57,7 @@ class TeradiciLogger:
         self.user_name = ''
         self.status = ''
         self.updated = False
-        self.last_updated = ''
+        self.last_updated = []
 
     def read_log_file(self):
         """ Finds and reads log file and returns as list of strings
@@ -114,7 +117,7 @@ class TeradiciLogger:
         Returns
         -------
         new_log_messages : list
-            List of updated lines only 
+            List of updated lines only
         NoneType :
             If no updates found
 
@@ -172,7 +175,7 @@ class TeradiciLogger:
 
         Returns
         -------
-        current_session_var : list [ time_of_update : list, user_name : str, current_status : str ]
+        current_session_var : list [ time_of_update : str, user_name : str, current_status : str ]
             Changes self.status and returns List of status info
         NoneType :
             Returns None if no status found amongst log messages
@@ -244,15 +247,47 @@ class TeradiciLogger:
             return current_session_var
 
         except TypeError:
-            return "Input is not a Teradici Log list"
+            return "Input is not a Teradici log list"
 
 
+    def create_update_message(self, session_variables):
+        """ Creates human readable str with session variables
+
+            Parameters
+            ----------
+            session_variables : list
+                Requires list from check_status
+
+            Raises
+            ------
+            TypeError:
+                Returns type error if a string or int/float is inputted
+
+            Returns
+            -------
+            update_message : str
+                Human readable message for posting on slack and GUI
+
+            """
+        try:
+
+            timestamp = " ".join(session_variables[0])
+            connected_message_template = f"{timestamp} | {self.pc_name} is {session_variables[2]} | Active User : {session_variables[1]}"
+            disconnected_message_template = f"{timestamp} | {self.pc_name} is DISCONNECTED | Last User : {self.user_name}"
+
+            if type(session_variables) != list:
+                raise TypeError
+
+            if session_variables[2] == "CONNECTED":
+                return connected_message_template
+            elif session_variables[2] == "INVALID":
+                return disconnected_message_template
+            else:
+                return "Error: Entered list does not appear to be a 'session_variable' list"
 
 
-
-
-
-
+        except TypeError:
+            return "Input is not a Teradici log list"
 
 
 
