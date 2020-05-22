@@ -7,6 +7,7 @@
 
 import os.path
 import os
+import datetime
 
 class TeradiciLogger:
     """
@@ -50,7 +51,7 @@ class TeradiciLogger:
         self.pc_name = pc_name
         self.path_to_log = f'//{pc_name}/c$/ProgramData/Teradici/PCoIPAgent/logs/'
         self.log_prefix = log_prefix
-        self.username = ''
+        self.user_name = ''
         self.status = ''
         self.updated = False
         self.last_updated = ''
@@ -65,7 +66,8 @@ class TeradiciLogger:
 
         Returns
         -------
-        A list of all lines in log file or error messages
+        log_contents : list
+            A list of all lines in log file or error messages
 
         """
 
@@ -111,7 +113,10 @@ class TeradiciLogger:
 
         Returns
         -------
-        List of updated lines only or None
+        new_log_messages : list
+            List of updated lines only 
+        NoneType :
+            If no updates found
 
         """
 
@@ -134,6 +139,8 @@ class TeradiciLogger:
                     if line_date[1] > self.last_updated[1]:
                         new_log_messages.append(line)
 
+            update_time = datetime.datetime.now()
+
             if len(new_log_messages) > 0:
                 self.updated = True
                 return new_log_messages
@@ -146,6 +153,100 @@ class TeradiciLogger:
 
         except:
             return 'Unexpected error in logger.TeradiciLogger.check_for_updates()'
+
+
+
+    def check_status(self, new_logs):
+        """ Checks to see if there is a change of connection status
+        amongst the new log messages
+
+        Parameters
+        ----------
+        log_file : list
+            Requires list from check_for_updates
+
+        Raises
+        ------
+        TypeError:
+            Returns type error if a string or int/float is inputted
+
+        Returns
+        -------
+        current_session_var : list [ time_of_update : list, user_name : str, current_status : str ]
+            Changes self.status and returns List of status info
+        NoneType :
+            Returns None if no status found amongst log messages
+
+        """
+        try:
+            if type(new_logs) != list:
+                raise TypeError
+
+            # Reference Variables
+            connection_messages = ["transition from CONNECTING --(CONNECTION_COMPLETE [102])--> CONNECTED", "transition from STOPPING -- STOPPING --(SERVER_STOPPED [202])--> INVALID"]
+            user_name_message = "has activated, single sign on completed."
+            status_found = False
+            user_name_found = False
+            new_logs =new_logs
+            # Used as counter to iterate backwards through log messages
+            line_num = len(new_logs)-1
+            # Variables to extract from message
+            latest_message = ''
+            user_name = ""
+            time_of_update = []
+            current_status = ""
+            # Return variable
+            current_session_var = []
+
+            # Finds the most recent line with a status message
+            while True:
+                if line_num < 0:
+                    raise IndexError
+
+                for message in connection_messages:
+                    if message in new_logs[line_num]:
+                        latest_message = new_logs[line_num]
+                        status_found = True
+                    else:
+                        if user_name_message in new_logs[line_num] and not user_name_found:
+                            # Process message to retrieve user name
+                            user_name = new_logs[line_num]
+                            user_name_found = True
+
+                line_num -= 1
+
+        except IndexError:
+        # Ran out of lines to check
+
+            # Check what data was found
+            if status_found or user_name_found:
+
+                if status_found:
+                    # Process message to retrieve timestamp
+                    time_of_update = latest_message[:19]
+                    time_of_update = time_of_update.split('T')
+                    # Process message to retrieve status
+                    current_status = latest_message.split()
+                    current_status = current_status[len(current_status)-1]
+                    self.status = current_status
+
+                if user_name_found:
+                    user_name = user_name.split('user ')
+                    user_name = user_name[1].split(' has activated')
+                    user_name = user_name[0]
+                    self.user_name = user_name
+            else:
+                # Didn't find any status messages
+                return None
+
+
+            current_session_var = time_of_update, user_name, current_status
+            return current_session_var
+
+        except TypeError:
+            return "Input is not a Teradici Log list"
+
+
 
 
 
