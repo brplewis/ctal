@@ -22,13 +22,16 @@ class TestTeradiciLoggerCheck(unittest.TestCase):
                     "2020-05-19T16:27:41.219Z 00000000-0000-0000-0000-000000000000 > LVL:2 RC:   0           AGENT :1444 Session ID: 1, session name: Console, session user: EVOLUTIONS\ops.wlr, session type: WTS_PROTOCOL_TYPE_CONSOLE, state: WTSActive, WTSSESSION_CHANGE(0x7).",
                     "2020-05-19T16:27:41.226Z 00000000-0000-0000-0000-000000000000 > LVL:2 RC:   0           AGENT :1444 SESSION CHANGE: session ID 1, message: WTS_SESSION_LOCK, server running: NO, rwc server running : NO",
                     "2020-05-19T16:27:45.014Z 00000000-0000-0000-0000-000000000000 > LVL:2 RC:   0           AGENT :1554 Server has been gone for 21 seconds, restoring state."]
+
         # Test to see if output is a  list
         self.assertIsInstance(tal_logger.check_for_updates(test_list), list)
         # Test to see if it detects updates
+        tal_logger.last_updated = ["2020-05-19", "13:27:41"]
         self.assertGreater(len(tal_logger.check_for_updates(test_list)), 0)
         # Test to see if it ignores old lines
         tal_logger.last_updated = ["2020-05-19", "20:27:41"]
         self.assertIsNone(tal_logger.check_for_updates(test_list))
+
         # Test error handling for string
         self.assertEqual(tal_logger.check_for_updates('String input'), "Input is not a Teradici log list")
         # Test error handling int
@@ -40,3 +43,58 @@ class TestTeradiciLoggerCheck(unittest.TestCase):
         # Test Error handling for incorrect list short
         self.assertEqual(tal_logger.check_for_updates(["Log message 1 xxxxxxxxxxxxxxxxxxxxxxxxx ", "Log Message 2 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx "]),
                          "Input is not a Teradici log list")
+
+
+class TestTeradiciLoggerStatus(unittest.TestCase):
+    def test_check_status(self):
+        tal_logger = TeradiciLogger('wlringest10')
+        test_list = ["2020-05-19T16:27:41.217Z 00000000-0000-0000-0000-000000000000 > LVL:2 RC:   0           AGENT :1444 WINDOWS SESSION EVENT: set session: 1, event: WTS_SESSION_LOCK.",
+            "2020-05-19T16:27:41.217Z 00000000-0000-0000-0000-000000000000 > LVL:2 RC:   0           AGENT :1444 ====== WINDOWS SESSION INFO ======",
+            "2020-05-19T16:27:41.219Z 00000000-0000-0000-0000-000000000000 > LVL:2 RC:   0           AGENT :1444 Session ID: 1, session name: Console, session user: EVOLUTIONS\ops.wlr, session type: WTS_PROTOCOL_TYPE_CONSOLE, state: WTSActive, WTSSESSION_CHANGE(0x7).",
+            "2020-05-19T16:27:41.226Z 00000000-0000-0000-0000-000000000000 > LVL:2 RC:   0           AGENT :1444 SESSION CHANGE: session ID 1, message: WTS_SESSION_LOCK, server running: NO, rwc server running : NO",
+            "2020-05-19T16:27:45.014Z 00000000-0000-0000-0000-000000000000 > LVL:2 RC:   0           AGENT :1554 Server has been gone for 21 seconds, restoring state."]
+        # Test no status update
+        self.assertIsNone(tal_logger.check_status(test_list))
+
+        #Test Disconnected status
+        test_list = ["2020-05-21T14:40:58.058Z f684cd80-7d9e-1038-a745-000000000000 > LVL:2 RC:   0           AGENT :1244 Connection COMPLETE: code=(0)",
+            "2020-05-21T14:40:58.058Z f684cd80-7d9e-1038-a745-000000000000 > LVL:2 RC:   0           AGENT :1244 -------------------------------------------------------------------",
+            "2020-05-21T14:40:58.059Z 00000000-0000-0000-0000-000000000000 > LVL:1 RC:   0           AGENT :-----------------------------------------------------------------------",
+            "2020-05-20T19:21:53.699Z 00000000-0000-0000-0000-000000000000 > LVL:1 RC:   0           AGENT :transition from STOPPING -- STOPPING --(SERVER_STOPPED [202])--> INVALID",
+            "2020-05-21T14:40:58.060Z 00000000-0000-0000-0000-000000000000 > LVL:1 RC:   0           AGENT :-----------------------------------------------------------------------"]
+        self.assertEqual(tal_logger.check_status(test_list)[2], "INVALID")
+
+        # Test Connection complete status
+        test_list = ["2020-05-21T14:40:58.058Z f684cd80-7d9e-1038-a745-000000000000 > LVL:2 RC:   0           AGENT :1244 Connection COMPLETE: code=(0)",
+            "2020-05-21T14:40:58.058Z f684cd80-7d9e-1038-a745-000000000000 > LVL:2 RC:   0           AGENT :1244 -------------------------------------------------------------------",
+            "2020-05-21T14:40:58.059Z 00000000-0000-0000-0000-000000000000 > LVL:1 RC:   0           AGENT :-----------------------------------------------------------------------",
+            "2020-05-21T14:40:58.059Z 00000000-0000-0000-0000-000000000000 > LVL:1 RC:   0           AGENT :transition from CONNECTING --(CONNECTION_COMPLETE [102])--> CONNECTED",
+            "2020-05-21T14:40:58.060Z 00000000-0000-0000-0000-000000000000 > LVL:1 RC:   0           AGENT :-----------------------------------------------------------------------",
+            "2020-05-21T14:40:58.060Z 00000000-0000-0000-0000-000000000000 > LVL:2 RC:   0           AGENT :cSERVER_SESSION::send_acknowledgement sending ack.",
+            "2020-05-21T14:40:58.060Z 00000000-0000-0000-0000-000000000000 > LVL:2 RC:   0           AGENT :send_message, 8 bytes",
+            "2020-05-21T14:40:58.160Z 00000000-0000-0000-0000-000000000000 > LVL:2 RC:   0           AGENT :cSERVER_SESSION::send_acknowledgement succeeded to srvr0005",
+            "2020-05-21T14:42:29.302Z 00000000-0000-0000-0000-000000000000 > LVL:2 RC:   0           AGENT :cSERVER_SESSION::agent_receiver_callback: message from A:srvr5;B:srvr0005 to A:srvr5, message = 16 00 00 00, len=20"]
+        self.assertEqual(tal_logger.check_status(test_list)[2], "CONNECTED" )
+        # Test Time stamp
+        self.assertEqual(tal_logger.check_status(test_list)[0], ["2020-05-21", "14:40:58"])
+
+        # Test Disconnected status
+        test_list = ["2020-05-21T14:40:55.433Z f684cd80-7d9e-1038-a745-000000000000 > LVL:2 RC:   0           AGENT :1754 SSO: user DOMAIN\John.Williams has activated, single sign on completed.",
+            "2020-05-21T14:40:58.058Z f684cd80-7d9e-1038-a745-000000000000 > LVL:2 RC:   0           AGENT :1244 -------------------------------------------------------------------",
+            "2020-05-21T14:40:58.059Z 00000000-0000-0000-0000-000000000000 > LVL:1 RC:   0           AGENT :-----------------------------------------------------------------------",
+            "2020-05-20T19:21:53.699Z 00000000-0000-0000-0000-000000000000 > LVL:1 RC:   0           AGENT :transition from STOPPING -- STOPPING --(SERVER_STOPPED [202])--> INVALID",
+            "2020-05-21T14:40:58.060Z 00000000-0000-0000-0000-000000000000 > LVL:1 RC:   0           AGENT :-----------------------------------------------------------------------",
+            "2020-05-21T14:40:58.060Z 00000000-0000-0000-0000-000000000000 > LVL:2 RC:   0           AGENT :cSERVER_SESSION::send_acknowledgement sending ack.",
+            "2020-05-21T14:40:58.060Z 00000000-0000-0000-0000-000000000000 > LVL:2 RC:   0           AGENT :send_message, 8 bytes",
+            "2020-05-21T14:40:58.160Z 00000000-0000-0000-0000-000000000000 > LVL:2 RC:   0           AGENT :cSERVER_SESSION::send_acknowledgement succeeded to srvr0005",
+            "2020-05-21T14:42:29.302Z 00000000-0000-0000-0000-000000000000 > LVL:2 RC:   0           AGENT :cSERVER_SESSION::agent_receiver_callback: message from A:srvr5;B:srvr0005 to A:srvr5, message = 16 00 00 00, len=20",
+            "2020-05-21T14:40:55.433Z f684cd80-7d9e-1038-a745-000000000000 > LVL:2 RC:   0           AGENT :1754 SSO: user DOMAIN\John.Williams has activated, single sign on completed."]
+        #self.assertEqual(tal_logger.check_status(test_list)[2], "INVALID")
+        # test for User_name when before message
+        self.assertEqual(tal_logger.check_status(test_list)[1], "DOMAIN\John.Williams")
+        # Test TypeError Str
+        self.assertEqual(tal_logger.check_status("Test list"), "Input is not a Teradici Log list")
+        # Test TypeError int
+        self.assertEqual(tal_logger.check_status(2), "Input is not a Teradici Log list")
+        # Test TypeError float
+        self.assertEqual(tal_logger.check_status(2.01), "Input is not a Teradici Log list")
