@@ -109,15 +109,17 @@ class TestTeradiciLoggerStatus(unittest.TestCase):
         self.assertEqual(tal_logger.check_status(2), "Input is not a Teradici log list")
         # Test TypeError float
         self.assertEqual(tal_logger.check_status(2.01), "Input is not a Teradici log list")
+        # Test output is List
+        self.assertIsInstance(tal_logger.check_status(test_list), list)
 
 class TestTeradiciLoggerMessage(unittest.TestCase):
     def test_create_update_report(self):
         tal_logger = TeradiciLogger('wlringest10')
         # Test Connected message
-        self.assertEqual(tal_logger.create_update_message([['2020-05-21', '14:40:58'], 'DOMAIN\John.Williams', 'CONNECTED']), '2020-05-21 14:40:58 | wlringest10 is CONNECTED | Active User : DOMAIN\John.Williams')
+        self.assertEqual(tal_logger.create_update_message([['2020-05-21', '14:40:58'], 'DOMAIN\John.Williams', 'CONNECTED']), '2020-05-21 14:40:58 | wlringest10 is CONNECTED | Active User : DOMAIN\John.Williams\n')
         # Test Disconnected message
         tal_logger.user_name = 'DOMAIN\John.Williams'
-        self.assertEqual(tal_logger.create_update_message([['2020-05-21', '14:40:58'], '', 'INVALID']), '2020-05-21 14:40:58 | wlringest10 is DISCONNECTED | Last User : DOMAIN\John.Williams')
+        self.assertEqual(tal_logger.create_update_message([['2020-05-21', '14:40:58'], '', 'INVALID']), '2020-05-21 14:40:58 | wlringest10 is DISCONNECTED | Last User : DOMAIN\John.Williams\n')
         # Check for wrong list error
         self.assertEqual(tal_logger.create_update_message(['Something', 20, 'Wrong']), "Error: Entered list does not appear to be a 'session_variable' list")
         # Test TypeError Str

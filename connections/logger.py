@@ -54,14 +54,19 @@ class TeradiciLogger:
 
 
     """
-    def __init__(self, pc_name, log_prefix='pcoip_agent_'):
+    def __init__(self, pc_name, log_prefix='pcoip_agent_', label=None):
         self.pc_name = pc_name
+        if label == None:
+            self.label = pc_name
+        else:
+            self.label = label
         self.path_to_log = f'//{pc_name}/c$/ProgramData/Teradici/PCoIPAgent/logs/'
         self.log_prefix = log_prefix
         self.user_name = ''
         self.status = ''
         self.updated = False
         self.last_updated = []
+        self.current_status = []
 
     def read_log_file(self):
         """ Finds and reads log file and returns as list of strings
@@ -247,7 +252,8 @@ class TeradiciLogger:
                 return None
 
 
-            current_session_var = time_of_update, user_name, current_status
+            current_session_var = [time_of_update, user_name, current_status]
+            self.current_status = current_session_var
             return current_session_var
 
         except TypeError:
@@ -276,12 +282,13 @@ class TeradiciLogger:
         try:
 
             timestamp = " ".join(session_variables[0])
-            connected_message_template = f"{timestamp} | {self.pc_name} is {session_variables[2]} | Active User : {session_variables[1]}"
-            disconnected_message_template = f"{timestamp} | {self.pc_name} is DISCONNECTED | Last User : {self.user_name}"
+            connected_message_template = f"{timestamp} | {self.pc_name} is {session_variables[2]} | Active User : {session_variables[1]}\n"
+            disconnected_message_template = f"{timestamp} | {self.pc_name} is DISCONNECTED | Last User : {self.user_name}\n"
 
             if type(session_variables) != list:
                 raise TypeError
 
+            # Convert INVALID status to DISCONNECTED
             if session_variables[2] == "CONNECTED":
                 return connected_message_template
             elif session_variables[2] == "INVALID":

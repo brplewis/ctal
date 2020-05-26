@@ -7,6 +7,10 @@
 
 """
 
+import logger
+import os
+
+
 class Manager:
     """
         Main suite of functions for controlling
@@ -45,7 +49,7 @@ class Manager:
             Connects to SQL database and retrieves config
         load_config() :
             Loads config file from database
-        launch_new_logger() :
+        add_logger() :
             Sets up a new logger instance
         create_logger_table() :
             Creates a new SQL table for monitoring group
@@ -96,8 +100,12 @@ class Manager:
 
             list_loggers = []
 
-            for logger in all_loggers:
-                list_loggers.append(logger.pc_name)
+            # Gets name of each logger object
+            for logger in self.all_loggers:
+                if logger.pc_name == logger.label:
+                    list_loggers.append(logger.pc_name)
+                else:
+                    list_loggers.append(logger.label)
 
             return list_loggers
 
@@ -109,6 +117,157 @@ class Manager:
             return "Unexpected error: Please check you have set up your loggers correctly"
 
 
-    def launch_new_logger(self, pc_name, type):
-        pass
+    def add_logger(self, pc_name, logger_type, label=None, group=None):
+        """ Creates a new logger instance and adds it to the
+            the all_loggers and loggers{}
+
+            Raises
+            ------
+            TypeError:
+                When input is not a str
+            ValueError:
+                When input hostname does not exist
+
+            Returns
+            -------
+                Returns "Complete" string
+
+            """
+
+        try:
+            if type(pc_name) != str:
+                raise TypeError
+
+            if not os.path.isdir(f'//{pc_name}/c$'):
+                raise ValueError
+
+            if logger_type == 'teradici':
+                # Adds label if needed
+                if label is None:
+                    new_instance = logger.TeradiciLogger(pc_name)
+                else:
+                    new_instance = logger.TeradiciLogger(pc_name, label=label)
+                # Logger number for connecting dictionary entry
+                # to logger objects in list
+                logger_number = len(self.all_loggers)
+                self.all_loggers.append(new_instance)
+                # Use label over pc_name if one is used
+                if label == None:
+                    self.loggers[pc_name] = (group, logger_number)
+                else:
+                    self.loggers[label] = (group, logger_number)
+                return 'Complete'
+
+
+        except ValueError:
+            return f"{pc_name} does not exist."
+
+        except TypeError:
+            return "Enter the PC name or IP as a string"
+
+        except:
+            return "Unexpected Error: Please check your input values"
+
+
+
+    def initial_status(self, logger_inst):
+        """ Gets status of new logger
+
+            Raises
+            ------
+            TypeError:
+                When logger_inst is not a TeradiciLogger or RDPLogger object
+
+            Returns
+            -------
+            update_summary : list
+                Returns a list of update summaries
+
+        """
+        try:
+            if not isinstance(logger_inst, 'TeradiciLogger') and not isinstance(logger_inst, 'RDPLogger'):
+                raise TypeError
+
+            log_contents = logger_inst.read_log_file()
+            # Check for error messages
+            if log_contents is str:
+                raise ValueError
+            logger_status = logger_inst.check_status(log_contents)
+            # Check for error messages
+            if logger_status is str:
+                raise ValueError
+            status_log = logger_inst.create_update_message(logger_status)
+            # Check for error messages
+            if status_log is str:
+                raise ValueError
+            return status_log
+
+        except TypeError:
+            return "Input is not a TeradiciLogger or RDP logger"
+
+        except ValueError:
+            self.process_error()
+
+
+        except:
+            return "Unexpect Error: Please check your logger instance"
+
+
+    def process_error(self, error_message):
+        print(error_message)
+
+
+    def get_update(self, group="all"):
+        """ Gets update summaries from all or a group of
+            loggers
+
+            Raises
+            ------
+            TypeError:
+                When input is not a str
+            ValueError:
+                When input hostname does not exist
+
+            Returns
+            -------
+            update_summary : list
+                Returns a list of update summaries
+
+        """
+
+        try:
+            summary_log = []
+            logger_list = []
+            if group == 'all':
+                logger_list = self.all_loggers
+
+            else:
+                for logger_inst in loggers:
+                    if logger_inst[0] == group:
+                        logger_list.append(logger_inst[1])
+
+            # Fetch summaries
+            for logger_inst in logger_list:
+                log_contents = logger_inst.read_log_file()
+                log_updates = logger_inst.check_for_updates(long_contents)
+                logger_status = logger_inst.check_status(log_updates)
+                if logger_status is None:
+                    logger_status = logger_inst.current_status
+                summary_log.append(logger_inst.create_update_message(logger_status))
+                return summary_log
+
+
+
+        except:
+            pass
+
+
+
+
+
+
+
+
+
+
 
