@@ -301,4 +301,6 @@ class TeradiciLogger:
             return "Input is not a Teradici log list"
 
 
+class RDPLogger:
+    pass
 
