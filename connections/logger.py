@@ -166,6 +166,9 @@ class TeradiciLogger:
         except TypeError:
             return "Input is not a Teradici log list"
 
+        except IndexError:
+            return line_date
+
         #except:
         #    return 'Unexpected error in logger.TeradiciLogger.check_for_updates()'
 
@@ -252,6 +255,10 @@ class TeradiciLogger:
                     self.user_name = user_name
             else:
                 # Didn't find any status messages
+                if not self.full_status:
+                    current_session_var = [self.last_updated, "", "No record"]
+                    return current_session_var
+
                 return self.full_status
 
 
@@ -291,7 +298,7 @@ class TeradiciLogger:
                 pc_name = self.label
             connected_message_template = f"{timestamp} | {pc_name} is {session_variables[2]} | Active User : {session_variables[1]}\n"
             disconnected_message_template = f"{timestamp} | {pc_name} is DISCONNECTED | Last User : {self.user_name}\n"
-
+            no_record_message_template = f"{timestamp} | {pc_name} is DISCONNECTED | No Record Available"
             if type(session_variables) != list:
                 raise TypeError
 
@@ -300,6 +307,8 @@ class TeradiciLogger:
                 return connected_message_template
             elif session_variables[2] == "INVALID":
                 return disconnected_message_template
+            elif session_variables[2] == "No Record":
+                return no_record_message_template
             else:
                 return "Error: Entered list does not appear to be a 'session_variable' list"
 
