@@ -151,6 +151,7 @@ class TeradiciLogger:
                     if line_date[1] > self.last_updated[1]:
                         new_log_messages.append(line)
 
+
             update_time = datetime.datetime.now()
 
             if len(new_log_messages) > 0:
@@ -163,8 +164,8 @@ class TeradiciLogger:
         except TypeError:
             return "Input is not a Teradici log list"
 
-        except:
-            return 'Unexpected error in logger.TeradiciLogger.check_for_updates()'
+        #except:
+        #    return 'Unexpected error in logger.TeradiciLogger.check_for_updates()'
 
 
 
@@ -216,7 +217,7 @@ class TeradiciLogger:
                     raise IndexError
 
                 for message in connection_messages:
-                    if message in new_logs[line_num]:
+                    if message in new_logs[line_num] and not status_found:
                         latest_message = new_logs[line_num]
                         status_found = True
                     else:
