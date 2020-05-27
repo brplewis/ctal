@@ -29,13 +29,15 @@ class TeradiciLogger:
         Stores the user that is reported to have connected via teradici
         this is filled by the function report_connection
     status : str
-        Stores a string stating the current connections status
+        Stores a string stating only the status of the connections eg "CONNECTED"
     updated : bool
         Stores a bool stating whether the connection status has been
         updated
     last_updated : list
         A list of two strings, [0] stating the date, [1] the time of last update
         this var is updated by the manager app
+    full_status : list
+        A list of all current status variables
 
 
     Methods
@@ -66,7 +68,7 @@ class TeradiciLogger:
         self.status = ''
         self.updated = False
         self.last_updated = []
-        self.current_status = []
+        self.full_status = []
 
     def read_log_file(self):
         """ Finds and reads log file and returns as list of strings
@@ -159,7 +161,7 @@ class TeradiciLogger:
                 return new_log_messages
             else:
                 self.updated = False
-                return None
+                return []
 
         except TypeError:
             return "Input is not a Teradici log list"
@@ -250,11 +252,11 @@ class TeradiciLogger:
                     self.user_name = user_name
             else:
                 # Didn't find any status messages
-                return None
+                return self.full_status
 
 
             current_session_var = [time_of_update, user_name, current_status]
-            self.current_status = current_session_var
+            self.full_status = current_session_var
             return current_session_var
 
         except TypeError:
@@ -283,8 +285,12 @@ class TeradiciLogger:
         try:
 
             timestamp = " ".join(session_variables[0])
-            connected_message_template = f"{timestamp} | {self.pc_name} is {session_variables[2]} | Active User : {session_variables[1]}\n"
-            disconnected_message_template = f"{timestamp} | {self.pc_name} is DISCONNECTED | Last User : {self.user_name}\n"
+            if self.pc_name == self.label:
+                pc_name = self.pc_name
+            else:
+                pc_name = self.label
+            connected_message_template = f"{timestamp} | {pc_name} is {session_variables[2]} | Active User : {session_variables[1]}\n"
+            disconnected_message_template = f"{timestamp} | {pc_name} is DISCONNECTED | Last User : {self.user_name}\n"
 
             if type(session_variables) != list:
                 raise TypeError
