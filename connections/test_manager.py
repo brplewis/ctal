@@ -28,5 +28,10 @@ class TestManager(unittest.TestCase):
         self.assertEqual(manager_init.initial_status("Test"), "Input is not a TeradiciLogger or RDP logger")
 
 
-    """def test_get_update(self):
-        self.assertEqual(manager_init.get_update(), "test")"""
+    def test_get_update(self):
+        #Check output
+        manager_init.add_logger('wlringest4', 'teradici', label="WLRINGEST5")
+        self.assertEqual(len(manager_init.get_update()), 3)
+        # Test group output
+        self.assertEqual(len(manager_init.get_update('WLR')), 1)
+        print(manager_init.get_update('WLR'))
