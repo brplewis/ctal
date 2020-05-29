@@ -6,10 +6,16 @@
 
 
 """
+# Program Modules
 
 import logger
+# Internal Modules
 import os
 import datetime
+
+# External Modules
+import mysql.connector
+
 
 
 class Manager:
@@ -172,8 +178,6 @@ class Manager:
         except:
             return "Unexpected Error: Please check your input values"
 
-
-
     def initial_status(self, logger_inst):
         """ Gets status of new logger
 
@@ -227,10 +231,8 @@ class Manager:
         except:
             return "Unexpect Error: Please check your logger instance"
 
-
     def process_error(self, error_message):
         print(error_message)
-
 
     def get_update(self, group="all"):
         """ Gets update summaries from all or a group of
@@ -285,14 +287,34 @@ class Manager:
                 summary_log.append(logger_inst.create_update_message(logger_status))
             return summary_log
 
-
-
-
         except ValueError:
             self.process_error(error_message)
             return error_message
 
 
+    def connect_to_database(self, host="127.0.0.1", database="ctal", user="root", password=".cred"):
+
+        try:
+            home = os.getenv("HOME")
+            password = f"{home}/{password}"
+            # Retrieve password and removes \n
+            with open(password, 'r') as file:
+                password = file.readline()
+                password = password[:len(password)-1]
+
+            # Connect to database
+            connection = mysql.connector.connect(host= host,
+                                                 database= database,
+                                                 user= user,
+                                                 password= password)
+            cursor = connection.cursor()
+            cursor.execute("select database();")
+
+            # Assign variables
+            if connection.is_connected():
+                self.database = connection
+                self.db_version = connection.get_server_info()
+                self.db_name = cursor.fetchone()
 
 
 
