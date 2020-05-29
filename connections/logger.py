@@ -62,7 +62,7 @@ class TeradiciLogger:
             self.label = pc_name
         else:
             self.label = label
-        self.path_to_log = f'//{pc_name}/c$/ProgramData/Teradici/PCoIPAgent/logs/'
+        self.path_to_log = f"/mnt/{self.pc_name}/ProgramData/Teradici/PCoIPAgent/logs/"
         self.log_prefix = log_prefix
         self.user_name = ''
         self.status = ''

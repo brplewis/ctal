@@ -9,6 +9,7 @@
 
 import logger
 import os
+import datetime
 
 
 class Manager:
@@ -138,7 +139,7 @@ class Manager:
             if type(pc_name) != str:
                 raise TypeError
 
-            if not os.path.isdir(f'//{pc_name}/c$'):
+            if not os.path.isdir(f'/mnt/{pc_name}/ProgramData'):
                 raise ValueError
 
             if logger_type == 'teradici':
@@ -152,10 +153,13 @@ class Manager:
                 logger_number = len(self.all_loggers)
                 self.all_loggers.append(new_instance)
                 # Use label over pc_name if one is used
-                if label == None:
+                if label is None:
                     self.loggers[pc_name] = (group, logger_number)
                 else:
                     self.loggers[label] = (group, logger_number)
+
+                # Run initial status check
+                self.initial_status(new_instance)
                 return 'Complete'
 
 
@@ -185,29 +189,40 @@ class Manager:
 
         """
         try:
-            if not isinstance(logger_inst, 'TeradiciLogger') and not isinstance(logger_inst, 'RDPLogger'):
-                raise TypeError
+            # Variable fir error reporting
+            error_message = ''
 
-            log_contents = logger_inst.read_log_file()
-            # Check for error messages
-            if log_contents is str:
-                raise ValueError
-            logger_status = logger_inst.check_status(log_contents)
-            # Check for error messages
-            if logger_status is str:
-                raise ValueError
-            status_log = logger_inst.create_update_message(logger_status)
-            # Check for error messages
-            if status_log is str:
-                raise ValueError
-            return status_log
+            if isinstance(logger_inst, logger.TeradiciLogger) or isinstance(logger_inst, logger.RDPLogger):
+
+                log_contents = logger_inst.read_log_file()
+                # Check for error messages
+                if log_contents is str:
+                    error_message = log_contents
+                    raise ValueError
+                logger_status = logger_inst.check_status(log_contents)
+                # Check for error messages
+                if logger_status is str:
+                    error_message = logger_status
+                    raise ValueError
+                status_log = logger_inst.create_update_message(logger_status)
+                # Check for error messages
+                if status_log is str:
+                    error_message = status_log
+                    raise ValueError
+
+                last_updated = str(datetime.datetime.now()).split()
+                self.last_updated = last_updated
+                logger_inst.last_updated = last_updated
+                return status_log
+
+            else:
+                raise TypeError
 
         except TypeError:
             return "Input is not a TeradiciLogger or RDP logger"
 
         except ValueError:
-            self.process_error()
-
+            self.process_error(error_message)
 
         except:
             return "Unexpect Error: Please check your logger instance"
@@ -236,30 +251,46 @@ class Manager:
         """
 
         try:
+            group = group
             summary_log = []
             logger_list = []
+
             if group == 'all':
                 logger_list = self.all_loggers
 
             else:
-                for logger_inst in loggers:
-                    if logger_inst[0] == group:
-                        logger_list.append(logger_inst[1])
+                for logger_inst in self.loggers:
+                    if self.loggers[logger_inst][0] == group:
+                        logger_position = self.loggers[logger_inst][1]
+                        logger_list.append(self.all_loggers[logger_position])
 
             # Fetch summaries
             for logger_inst in logger_list:
                 log_contents = logger_inst.read_log_file()
-                log_updates = logger_inst.check_for_updates(long_contents)
+                # Check for error messages
+                if log_contents is str:
+                    error_message = log_contents
+                    raise ValueError
+                log_updates = logger_inst.check_for_updates(log_contents)
+                # Check for error messages
+                if log_updates is str:
+                    error_message = log_contents
+                    raise ValueError
                 logger_status = logger_inst.check_status(log_updates)
-                if logger_status is None:
-                    logger_status = logger_inst.current_status
+                # Check for error messages
+                if logger_status is str:
+                    error_message = log_contents
+                    raise ValueError
+
                 summary_log.append(logger_inst.create_update_message(logger_status))
-                return summary_log
+            return summary_log
 
 
 
-        except:
-            pass
+
+        except ValueError:
+            self.process_error(error_message)
+            return error_message
 
 
 

@@ -35,3 +35,4 @@ class TestManager(unittest.TestCase):
         # Test group output
         self.assertEqual(len(manager_init.get_update('WLR')), 1)
         print(manager_init.get_update('WLR'))
+

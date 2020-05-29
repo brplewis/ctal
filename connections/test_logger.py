@@ -30,7 +30,7 @@ class TestTeradiciLoggerCheck(unittest.TestCase):
         self.assertGreater(len(tal_logger.check_for_updates(test_list)), 0)
         # Test to see if it ignores old lines
         tal_logger.last_updated = ["2020-05-19", "20:27:41"]
-        self.assertIsNone(tal_logger.check_for_updates(test_list))
+        self.assertEqual(tal_logger.check_for_updates(test_list), [])
 
         # Test error handling for string
         self.assertEqual(tal_logger.check_for_updates('String input'), "Input is not a Teradici log list")
@@ -54,7 +54,7 @@ class TestTeradiciLoggerStatus(unittest.TestCase):
             "2020-05-19T16:27:41.226Z 00000000-0000-0000-0000-000000000000 > LVL:2 RC:   0           AGENT :1444 SESSION CHANGE: session ID 1, message: WTS_SESSION_LOCK, server running: NO, rwc server running : NO",
             "2020-05-19T16:27:45.014Z 00000000-0000-0000-0000-000000000000 > LVL:2 RC:   0           AGENT :1554 Server has been gone for 21 seconds, restoring state."]
         # Test no status update
-        self.assertIsNone(tal_logger.check_status(test_list))
+        self.assertEqual(tal_logger.check_status(test_list), [[], '', 'No record'])
 
         #Test Disconnected status
         test_list = ["2020-05-21T14:40:58.058Z f684cd80-7d9e-1038-a745-000000000000 > LVL:2 RC:   0           AGENT :1244 Connection COMPLETE: code=(0)",
