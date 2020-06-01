@@ -85,6 +85,9 @@ class Manager:
         self.slack_channel = ''
         self.slack_key = ''
         self.last_updated = []
+        self.database = None
+        self.database_name = ''
+        self.database_version = ''
 
     def get_loggers(self):
         """ Sends a list of all monitored pcs / loggers
@@ -293,6 +296,22 @@ class Manager:
 
 
     def connect_to_database(self, host="127.0.0.1", database="ctal", user="root", password=".cred"):
+        """ Connects to mysql database and applies objects and variables to
+            self.database variables
+
+            Raises
+            ------
+            TypeError:
+                When input is not a str
+            ValueError:
+                When input hostname does not exist
+
+            Returns
+            -------
+            str
+                Returns a connection message as a string
+
+        """
 
         try:
             home = os.getenv("HOME")
@@ -313,8 +332,16 @@ class Manager:
             # Assign variables
             if connection.is_connected():
                 self.database = connection
-                self.db_version = connection.get_server_info()
-                self.db_name = cursor.fetchone()
+                self.database_version = connection.get_server_info()
+                self.database_name = cursor.fetchone()
+
+            return "Successful | Connection status: Connected"
+
+        except Exception as error:
+            return f"Unsuccessful | Error message : {error}"
+
+
+
 
 
 

@@ -37,3 +37,8 @@ class TestManager(unittest.TestCase):
         self.assertEqual(len(manager_init.get_update('WLR')), 1)
         print(manager_init.get_update('WLR'))
 
+    def test_connect_to_database(self):
+        # Test successful connection
+        self.assertEqual(manager_init.connect_to_database(host='10.10.30.77', user='bob'), "Successful | Connection status: Connected")
+        # Test unsuccessful connection
+        self.assertEqual(manager_init.connect_to_database(host='10.10.30.77', user='john'), "Unsuccessful | Error message : 1045 (28000): Access denied for user 'john'@'10.10.30.252' (using password: YES)")
