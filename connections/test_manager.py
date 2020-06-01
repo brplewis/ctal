@@ -32,6 +32,7 @@ class TestManager(unittest.TestCase):
         #Check output
         manager_init.add_logger('wlringest4', 'teradici', label="WLRINGEST5")
         self.assertEqual(len(manager_init.get_update()), 3)
+        print(manager_init.get_update())
         # Test group output
         self.assertEqual(len(manager_init.get_update('WLR')), 1)
         print(manager_init.get_update('WLR'))
