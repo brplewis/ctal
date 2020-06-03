@@ -5,6 +5,7 @@ from logger import TeradiciLogger
 manager_init = Manager()
 
 class TestManager(unittest.TestCase):
+
     def test_add_logger(self):
         # test for successful creation
         self.assertEqual(manager_init.add_logger('wlringest14', 'teradici'), "Complete")
@@ -27,7 +28,6 @@ class TestManager(unittest.TestCase):
         # Check input error catching
         self.assertEqual(manager_init.initial_status("Test"), "Input is not a TeradiciLogger or RDP logger")
 
-
     def test_get_update(self):
         #Check output
         manager_init.add_logger('wlringest4', 'teradici', label="WLRINGEST5")
@@ -42,3 +42,10 @@ class TestManager(unittest.TestCase):
         self.assertEqual(manager_init.connect_to_database(host='10.10.30.77', user='bob'), "Successful | Connection status: Connected")
         # Test unsuccessful connection
         self.assertEqual(manager_init.connect_to_database(host='10.10.30.77', user='john'), "Unsuccessful | Error message : 1045 (28000): Access denied for user 'john'@'10.10.30.252' (using password: YES)")
+
+
+    def test_create_group(self):
+        self.assertEqual(manager_init.connect_to_database(host='10.10.30.77', user='bob'), "Successful | Connection status: Connected")
+        # Test creation of group in list
+        self.assertEqual(manager_init.create_logger_group('WLR'), "TEST")
+

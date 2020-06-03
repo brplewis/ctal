@@ -4,18 +4,17 @@
     and deploys loggers while also having functions
     to update the GUI and Slack channels
 
-
 """
-# Program Modules
 
+# Program Modules
 import logger
+
 # Internal Modules
 import os
 import datetime
 
 # External Modules
 import mysql.connector
-
 
 
 class Manager:
@@ -31,6 +30,8 @@ class Manager:
             List of logger objects
         loggers : Dict
             A dictionary of loggers and their database table
+        logger_groups : list
+            List of all logger group names
         database_ip : str
             IP address and port info for connecting to
             SQL database
@@ -58,9 +59,9 @@ class Manager:
             Loads config file from database
         add_logger() :
             Sets up a new logger instance
-        create_logger_table() :
+        create_logger_group() :
             Creates a new SQL table for monitoring group
-        first_check() :
+        initial_status() :
             Like check_for_updates but it grabs the latest change
             regardless of last_updated
         check_for_updates() :
@@ -77,9 +78,11 @@ class Manager:
 
 
                 """
+
     def __init__(self):
         self.all_loggers = []
         self.loggers = {}
+        self.logger_groups = []
         self.database_ip = ''
         self.database = None
         self.slack_channel = ''
@@ -92,14 +95,14 @@ class Manager:
     def get_loggers(self):
         """ Sends a list of all monitored pcs / loggers
 
-        Raises
-        ------
-        IndexError:
-            When no loggers have been set up
+            Raises
+            ------
+            IndexError:
+                When no loggers have been set up
 
-        Returns
-        -------
-            List of the names of all loggers
+            Returns
+            -------
+                List of the names of all loggers
 
         """
 
@@ -126,7 +129,6 @@ class Manager:
             # Issue with fetching name or logger var
             return "Unexpected error: Please check you have set up your loggers correctly"
 
-
     def add_logger(self, pc_name, logger_type, label=None, group=None):
         """ Creates a new logger instance and adds it to the
             the all_loggers and loggers{}
@@ -142,7 +144,7 @@ class Manager:
             -------
                 Returns "Complete" string
 
-            """
+        """
 
         try:
             if type(pc_name) != str:
@@ -170,7 +172,6 @@ class Manager:
                 # Run initial status check
                 self.initial_status(new_instance)
                 return 'Complete'
-
 
         except ValueError:
             return f"{pc_name} does not exist."
@@ -294,21 +295,29 @@ class Manager:
             self.process_error(error_message)
             return error_message
 
-
     def connect_to_database(self, host="127.0.0.1", database="ctal", user="root", password=".cred"):
         """ Connects to mysql database and applies objects and variables to
             self.database variables
 
+            Parameters
+            ----------
+            host : str [optional]
+                Requires a IP address or hostname for MYSql server
+            database : str [optional]
+                Requires the name of the database
+            user : str [optional]
+                Requires username of user with full permissions
+            password : str [optional]
+                Requires the filename of a file that contains your password
+
             Raises
             ------
-            TypeError:
-                When input is not a str
-            ValueError:
-                When input hostname does not exist
-
+            Exception:
+                This is a catch all that returns the error message as a part of
+                a connection message
             Returns
             -------
-            str
+            str:
                 Returns a connection message as a string
 
         """
@@ -319,34 +328,133 @@ class Manager:
             # Retrieve password and removes \n
             with open(password, 'r') as file:
                 password = file.readline()
-                password = password[:len(password)-1]
+                password = password[:len(password) - 1]
 
             # Connect to database
-            connection = mysql.connector.connect(host= host,
-                                                 database= database,
-                                                 user= user,
-                                                 password= password)
+            connection = mysql.connector.connect(host=host,
+                                                 database=database,
+                                                 user=user,
+                                                 password=password,
+                                                 autocommit=True)
+
             cursor = connection.cursor()
-            cursor.execute("select database();")
+            #cursor.execute("select database();")
 
             # Assign variables
-            if connection.is_connected():
-                self.database = connection
-                self.database_version = connection.get_server_info()
-                self.database_name = cursor.fetchone()
+
+            self.database = connection
+            self.database_version = connection.get_server_info()
+            self.database_name = database
 
             return "Successful | Connection status: Connected"
 
         except Exception as error:
             return f"Unsuccessful | Error message : {error}"
 
+    def load_config(self):
+        """ Loads config settings
+
+            Raises
+            ------
+            TypeError:
+                When input is not a config file
+            ValueError:
+                When config contents does not match config format
+
+            Returns
+            -------
+            str:
+                Returns status message
+
+        """
+        pass
+
+    def save_config(self):
+        """ Loads config settings
+
+            Raises
+            ------
+            TypeError:
+                When input is not a config file
+            ValueError:
+                When config contents does not match config format
+
+            Returns
+            -------
+            str:
+                Returns status message
+
+        """
+        pass
+
+    def create_logger_group(self, group_name):
+        """ Add new logger group to self.logger_groups and
+            creates a new table in the database
+
+            Raises
+            -----
+
+            ValueError:
+                When group name is already used
+
+            Returns
+            -------
+            str:
+                Returns status message
+
+        """
+        try:
+            if group_name in self.logger_groups:
+                raise ValueError
+
+            # Add new group name to list
+            self.logger_groups.append(group_name)
+
+            # Create table
+            database_cursor = self.database.cursor()
+            database_cursor.execute(f"CREATE TABLE {group_name} (pc_name VARCHAR(50),"
+                                    f"status VARCHAR(50), pc_ID int PRIMARY KEY AUTO_INCREMENT);")
+        except ValueError:
+            return "ERROR: Group already exists"
+
+    def add_to_database(self, group_name, update_list):
+        """ Add pc status data to group tables.
 
 
+            Parameters
+            ----------
+            group_name : str
+                Requires a group name for table SQL table selection
+            update_list : list
+                Requires a list of tuples containing pc name and status
 
+            Raises
+            -----
 
+            ValueError:
+                When update_list is not the correct format
 
+            Returns
+            -------
+            str:
+                Returns status message
 
+        """
 
+        database_cursor = self.database.cursor()
+
+        for update in list:
+            pc_name = update[0]
+            status = update[1]
+
+            # check if pc_name is in group
+            if database_cursor.execute(f"SELECT EXISTS(SELECT * from {group_name} WHERE pc_name={pc_name});"):
+                # if so run update
+                database_cursor.execute(f"SELECT time_stamp, user_name, status FROM {group_name} WHERE pc_name="
+                                        f"{pc_name};")
+            else:
+                database_cursor.execute(f"INSERT INTO {group_name} (time_stamp, pc_name, user_name, status) VALUES ("
+                                        f"{time_stamp},{pc_name}, {user_name}, {status});")
 
 
 
