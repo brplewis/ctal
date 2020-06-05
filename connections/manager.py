@@ -338,7 +338,7 @@ class Manager:
                                                  autocommit=True)
 
             cursor = connection.cursor()
-            #cursor.execute("select database();")
+            # cursor.execute("select database();")
 
             # Assign variables
 
@@ -413,11 +413,17 @@ class Manager:
             # Create table
             database_cursor = self.database.cursor()
             database_cursor.execute(f"CREATE TABLE {group_name} (pc_name VARCHAR(50),"
-                                    f"status VARCHAR(50), pc_ID int PRIMARY KEY AUTO_INCREMENT);")
+                                    f"status VARCHAR(300), pc_ID int PRIMARY KEY AUTO_INCREMENT);")
+
+            return f"{group_name} group was successfully created."
+
         except ValueError:
             return "ERROR: Group already exists"
 
-    def add_to_database(self, group_name, update_list):
+        except Exception as error:
+            return f"Unsuccessful | Error message : {error}"
+
+    def update_database(self, group_name, update_list):
         """ Add pc status data to group tables.
 
 
@@ -431,7 +437,49 @@ class Manager:
             Raises
             -----
 
-            ValueError:
+            IndexError:
+                When update_list is not the correct format
+
+            Returns
+            -------
+            str:
+                Returns status message
+
+        """
+        try:
+            database_cursor = self.database.cursor(buffered=True)
+
+            for update in update_list:
+                pc_name = update[0]
+                status = update[1]
+
+                # check if pc_name is in group
+                database_cursor.execute(f"SELECT status FROM {group_name} WHERE {group_name}.pc_name = '{pc_name}';")
+                if database_cursor.fetchone() is None:
+                    database_cursor.execute(f"INSERT INTO {group_name} (pc_name, status) VALUES ('{pc_name}', '{status}');")
+                else:
+                    database_cursor.execute(f"UPDATE WLR SET status = '{status}' WHERE pc_name = '{pc_name}';")
+
+            return "Update Complete"
+
+        except IndexError:
+            return "ERROR: Update_list error, bad formatting"
+
+
+    def fetch_status_data(self, group_name):
+        """ Add pc status data to group tables.
+
+            Parameters
+            ----------
+            group_name : str
+                Requires a group name for table SQL table selection
+            update_list : list
+                Requires a list of tuples containing pc name and status
+
+            Raises
+            -----
+
+            IndexError:
                 When update_list is not the correct format
 
             Returns
@@ -441,20 +489,19 @@ class Manager:
 
         """
 
-        database_cursor = self.database.cursor()
+        summary_list = []
 
-        for update in list:
-            pc_name = update[0]
-            status = update[1]
+        database_cursor = self.database.cursor(buffered=True)
+        database_cursor.execute(f"SELECT * FROM {group_name} ORDER BY length(pc_name), pc_name;")
 
-            # check if pc_name is in group
-            if database_cursor.execute(f"SELECT EXISTS(SELECT * from {group_name} WHERE pc_name={pc_name});"):
-                # if so run update
-                database_cursor.execute(f"SELECT time_stamp, user_name, status FROM {group_name} WHERE pc_name="
-                                        f"{pc_name};")
-            else:
-                database_cursor.execute(f"INSERT INTO {group_name} (time_stamp, pc_name, user_name, status) VALUES ("
-                                        f"{time_stamp},{pc_name}, {user_name}, {status});")
+        for status in database_cursor:
+            summary_list.append(status[1])
+
+        print(summary_list)
+
+
+
+
 
 
 

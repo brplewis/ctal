@@ -39,13 +39,25 @@ class TestManager(unittest.TestCase):
 
     def test_connect_to_database(self):
         # Test successful connection
-        self.assertEqual(manager_init.connect_to_database(host='10.10.30.77', user='bob'), "Successful | Connection status: Connected")
+        self.assertEqual(manager_init.connect_to_database(host='10.10.30.77', user='bob'),
+                         "Successful | Connection status: Connected")
         # Test unsuccessful connection
-        self.assertEqual(manager_init.connect_to_database(host='10.10.30.77', user='john'), "Unsuccessful | Error message : 1045 (28000): Access denied for user 'john'@'10.10.30.252' (using password: YES)")
+        self.assertEqual(manager_init.connect_to_database(host='10.10.30.77', user='john'),
+                         "Unsuccessful | Error message : 1045 (28000): Access denied for user 'john'@'10.10.30.252' ("
+                         "using password: YES)")
 
 
     def test_create_group(self):
         self.assertEqual(manager_init.connect_to_database(host='10.10.30.77', user='bob'), "Successful | Connection status: Connected")
         # Test creation of group in list
-        self.assertEqual(manager_init.create_logger_group('WLR'), "TEST")
+        self.assertEqual(manager_init.create_logger_group('WLR'), "WLR group was successfully created.")
 
+
+    def test_add_to_database(self):
+        self.assertEqual(manager_init.connect_to_database(host='10.10.30.77', user='bob'),
+                         "Successful | Connection status: Connected")
+        # Test creation of group in list
+        #self.assertEqual(manager_init.create_logger_group('WLR'), "WLR group was successfully created.")
+        # Test successful data addition
+        summary_list = [["wlringest14", "12:00 | wlringest14 is CONNECTED | Active User : ops.wlr"],["wlringest11", "10:00 | wlringest11 is CONNECTED | Active User : ops.wlr"], ["wlringest8", "12:00 | wlringest8 is CONNECTED | Active User : ops.wlr"]]
+        self.assertEqual(manager_init.update_database("WLR", summary_list), "Update Complete")
