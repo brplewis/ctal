@@ -56,12 +56,13 @@ class TeradiciLogger:
 
 
     """
-    def __init__(self, pc_name, log_prefix='pcoip_agent_', label=None):
+    def __init__(self, pc_name, log_prefix='pcoip_agent_', label=None, group='all'):
         self.pc_name = pc_name
         if label == None:
             self.label = pc_name
         else:
             self.label = label
+        self.group_name = group
         self.path_to_log = f"/mnt/{self.pc_name}/ProgramData/Teradici/PCoIPAgent/logs/"
         self.log_prefix = log_prefix
         self.user_name = ''
@@ -319,4 +320,3 @@ class TeradiciLogger:
 
 class RDPLogger:
     pass
-
